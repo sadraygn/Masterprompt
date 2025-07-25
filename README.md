@@ -52,7 +52,7 @@ The system consists of:
 - **Broker API**: http://localhost:4000
 - **API Docs**: http://localhost:4000/docs
 - **Langfuse**: http://localhost:3002
-- **LiteLLM Proxy**: http://localhost:8000
+- **LiteLLM Proxy**: http://localhost:8001
 
 ## 🔑 Authentication
 

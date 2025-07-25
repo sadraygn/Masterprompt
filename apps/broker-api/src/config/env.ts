@@ -10,7 +10,7 @@ export const env = {
   PORT: parseInt(process.env.PORT || '4000', 10),
   
   // LiteLLM
-  LITELLM_BASE_URL: process.env.LITELLM_BASE_URL || 'http://localhost:8000',
+  LITELLM_BASE_URL: process.env.LITELLM_BASE_URL || 'http://localhost:8001',
   LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY || 'sk-1234567890abcdef',
   
   // Langfuse

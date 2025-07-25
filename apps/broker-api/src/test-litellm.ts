@@ -6,7 +6,7 @@ async function testLiteLLM() {
 
   const client = new OpenAI({
     apiKey: 'sk-1234567890abcdef', // Mock key for testing
-    baseURL: 'http://localhost:8000/v1',
+    baseURL: 'http://localhost:8001/v1',
   });
 
   try {
