@@ -1,0 +1,52 @@
+model_list:
+  # OpenAI Models
+  - model_name: gpt-3.5-turbo
+    litellm_params:
+      model: gpt-3.5-turbo
+      api_key: os.environ/OPENAI_API_KEY
+      
+  - model_name: gpt-4
+    litellm_params:
+      model: gpt-4
+      api_key: os.environ/OPENAI_API_KEY
+
+  # Google Models
+  - model_name: gemini-pro
+    litellm_params:
+      model: gemini/gemini-pro
+      api_key: os.environ/GOOGLE_API_KEY
+      
+  - model_name: gemini-pro-vision
+    litellm_params:
+      model: gemini/gemini-pro-vision
+      api_key: os.environ/GOOGLE_API_KEY
+
+  # Ollama Models (Local)
+  - model_name: llama3
+    litellm_params:
+      model: ollama/llama3
+      api_base: os.environ/LITELLM_API_BASE
+      
+  - model_name: codellama
+    litellm_params:
+      model: ollama/codellama
+      api_base: os.environ/LITELLM_API_BASE
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/LITELLM_DATABASE_URL
+  
+  # Cost tracking
+  spend_budget_duration: daily
+  max_budget: 10
+  budget_duration: 1d
+  
+  # Langfuse integration
+  success_callback: ["langfuse"]
+  langfuse_public_key: os.environ/LITELLM_LANGFUSE_PUBLIC_KEY
+  langfuse_secret_key: os.environ/LITELLM_LANGFUSE_SECRET_KEY
+  langfuse_host: os.environ/LANGFUSE_HOST
+  
+  # Request settings
+  drop_params: true
+  set_verbose: false
