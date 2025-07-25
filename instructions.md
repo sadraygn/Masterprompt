@@ -2,6 +2,17 @@
 
 This guide will walk you through obtaining all necessary API keys and setting up your development environment.
 
+## 🚀 Quick Start Summary
+
+**Minimum Requirements for Phase 1:**
+- **Budget**: $5 (for OpenAI API only)
+- **Free Options**: Google Gemini (60 req/min), Ollama (local)
+- **Time**: ~15 minutes to set up
+
+**What's Required vs Optional:**
+- ✅ **Required**: OpenAI API key (paid) OR Google AI key (free tier)
+- ⭕ **Optional**: Langfuse (free), Anthropic Claude (paid), Ollama (free)
+
 ## Prerequisites
 
 - Docker and Docker Compose installed
@@ -11,13 +22,25 @@ This guide will walk you through obtaining all necessary API keys and setting up
 
 ## Step 1: Obtain API Keys
 
-### OpenAI API Key (Required for GPT models)
+### API Keys Overview
+
+| Provider | Required | Free Tier | Cost | Notes |
+|----------|----------|-----------|------|-------|
+| OpenAI | **Required** for Phase 1 | ❌ No | 💰 Paid only | Minimum $5 credit |
+| Google AI (Gemini) | **Required** for Phase 1 | ✅ Yes | 🆓/💰 Free + Paid | 60 requests/min free |
+| Langfuse | Optional | ✅ Yes | 🆓 Free | Observability platform |
+| Anthropic (Claude) | Optional | ❌ No | 💰 Paid only | Minimum $5 credit |
+| Ollama | Optional | ✅ Yes | 🆓 Free | Local models only |
+
+### OpenAI API Key (Required - 💰 PAID ONLY)
+
+**Cost**: ~$0.002 per 1K tokens (GPT-3.5-turbo), ~$0.03 per 1K tokens (GPT-4)
 
 1. **Create OpenAI Account**
    - Go to [https://platform.openai.com/signup](https://platform.openai.com/signup)
    - Sign up with your email or Google account
 
-2. **Add Payment Method**
+2. **Add Payment Method** ⚠️ **REQUIRED**
    - Navigate to [https://platform.openai.com/account/billing](https://platform.openai.com/account/billing)
    - Add a credit card (minimum $5 credit required)
    - Set a monthly spending limit for safety
@@ -29,23 +52,27 @@ This guide will walk you through obtaining all necessary API keys and setting up
    - Copy the key immediately (it won't be shown again)
    - Save it securely
 
-### Google AI (Gemini) API Key (Required for Gemini models)
+### Google AI (Gemini) API Key (Required - 🆓 FREE TIER AVAILABLE)
+
+**Cost**: FREE for 60 requests/minute, then $0.00025 per 1K characters
 
 1. **Access Google AI Studio**
    - Visit [https://aistudio.google.com/](https://aistudio.google.com/)
    - Sign in with your Google account
 
-2. **Get API Key**
+2. **Get API Key** 🆓 **FREE**
    - Click on "Get API key" in the left sidebar
    - Click "Create API key"
    - Select "Create API key in new project" or choose existing
    - Copy the generated key
 
-3. **Enable Billing (Optional but recommended)**
-   - Free tier: 60 requests per minute
-   - For production use, enable billing in Google Cloud Console
+3. **Billing Status**
+   - ✅ **Free tier**: 60 requests per minute (sufficient for development)
+   - 💰 **Paid tier**: Enable billing in Google Cloud Console for higher limits
 
-### Langfuse API Keys (Optional for Phase 1)
+### Langfuse API Keys (Optional - 🆓 FREE)
+
+**Cost**: Completely FREE for self-hosted, FREE tier for cloud (5k observations/month)
 
 1. **Create Langfuse Account**
    - Go to [https://cloud.langfuse.com/auth/sign-up](https://cloud.langfuse.com/auth/sign-up)
@@ -60,13 +87,15 @@ This guide will walk you through obtaining all necessary API keys and setting up
    - Create new API keys
    - Copy both Public and Secret keys
 
-### Anthropic API Key (Optional - for Claude models)
+### Anthropic API Key (Optional - 💰 PAID ONLY)
+
+**Cost**: ~$0.008 per 1K tokens (Claude 3 Haiku), ~$0.024 per 1K tokens (Claude 3 Opus)
 
 1. **Create Account**
    - Visit [https://console.anthropic.com/](https://console.anthropic.com/)
    - Sign up and verify email
 
-2. **Add Payment**
+2. **Add Payment** ⚠️ **REQUIRED**
    - Add payment method
    - Minimum $5 credit required
 
@@ -75,7 +104,7 @@ This guide will walk you through obtaining all necessary API keys and setting up
    - Create new key
    - Copy and save securely
 
-## Step 2: Local Ollama Setup (Optional - for local models)
+## Step 2: Local Ollama Setup (Optional - 🆓 FREE local models)
 
 ### macOS/Linux
 ```bash
@@ -153,7 +182,25 @@ ollama pull codellama
    pnpm tsx src/test-litellm.ts
    ```
 
-## Step 5: Cost Management Tips
+## Step 5: Minimum Budget Requirements
+
+### To Get Started (Phase 1)
+
+| Provider | Minimum Required | What You Get |
+|----------|-----------------|--------------|
+| **OpenAI** | $5 (required) | ~2,500 requests with GPT-3.5-turbo |
+| **Google AI** | $0 (free tier) | 60 requests/minute free |
+| **Total Minimum** | **$5** | Sufficient for all Phase 1 testing |
+
+### Optional Providers
+
+| Provider | Minimum | Use Case |
+|----------|---------|----------|
+| Anthropic (Claude) | $5 | If you want Claude models |
+| Langfuse Cloud | $0 | Free tier: 5k observations/month |
+| Ollama | $0 | Completely free (runs locally) |
+
+## Step 6: Cost Management Tips
 
 ### OpenAI
 - Set usage limits: [https://platform.openai.com/account/limits](https://platform.openai.com/account/limits)
