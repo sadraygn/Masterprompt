@@ -47,3 +47,7 @@ export interface ErrorResponse {
     code?: string;
   };
 }
+
+// Vector store exports
+export { createVectorStore, VectorStore, WeaviateStore } from './vector-store.js';
+export type { VectorDocument, VectorSearchResult, VectorStoreConfig } from './vector-store.js';

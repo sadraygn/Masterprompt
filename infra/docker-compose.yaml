@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_MULTIPLE_DATABASES: prompt_studio,litellm,langfuse
+      POSTGRES_MULTIPLE_DATABASES: prompt_studio,litellm,langfuse,flowise
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
@@ -79,9 +79,109 @@ services:
         reservations:
           memory: 2G
 
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai'
+      OPENAI_APIKEY: ${OPENAI_API_KEY:-sk-test}
+      CLUSTER_HOSTNAME: 'weaviate'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flowise:
+    image: flowiseai/flowise:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3100:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_TYPE=postgres
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=flowise
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - FLOWISE_SECRETKEY_OVERWRITE=${FLOWISE_SECRET_KEY:-my_flowise_secret_key}
+      - MODE=queue
+      - QUEUE_NAME=flowise-queue
+      - REDIS_URL=redis://redis:6379
+      - WORKER_CONCURRENCY=2
+      - ENABLE_BULLMQ_DASHBOARD=true
+      - LOG_LEVEL=info
+      - LOG_PATH=/root/.flowise/logs
+      - APIKEY_STORAGE_TYPE=db
+      - TOOL_FUNCTION_BUILTIN_DEP=
+      - TOOL_FUNCTION_EXTERNAL_DEP=
+    volumes:
+      - flowise_data:/root/.flowise
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  flowise-worker:
+    image: flowiseai/flowise:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      flowise:
+        condition: service_healthy
+    environment:
+      - DATABASE_TYPE=postgres
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=flowise
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - FLOWISE_SECRETKEY_OVERWRITE=${FLOWISE_SECRET_KEY:-my_flowise_secret_key}
+      - MODE=worker
+      - QUEUE_NAME=flowise-queue
+      - REDIS_URL=redis://redis:6379
+      - WORKER_CONCURRENCY=2
+      - LOG_LEVEL=info
+      - LOG_PATH=/root/.flowise/logs
+    volumes:
+      - flowise_data:/root/.flowise
+    deploy:
+      replicas: 2
+
 volumes:
   postgres_data:
   ollama_data:
+  weaviate_data:
+  redis_data:
+  flowise_data:
 
 networks:
   default:

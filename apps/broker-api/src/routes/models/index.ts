@@ -20,7 +20,7 @@ const modelsRoute: FastifyPluginAsync = async (fastify) => {
   const broker = new BrokerService();
 
   fastify.get('/models', {
-    preHandler: fastify.auth([fastify.bearerAuth]),
+    preHandler: (fastify as any).auth([(fastify as any).bearerAuth]),
     schema: modelsSchema,
   }, async (request, reply) => {
     try {

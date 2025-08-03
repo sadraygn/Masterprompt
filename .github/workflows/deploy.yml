@@ -1,0 +1,190 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Generate version
+        id: version
+        run: echo "version=$(date +%Y%m%d)-${{ github.sha }}" >> $GITHUB_OUTPUT
+        
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build and push broker API
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/broker-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/broker-api:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/broker-api:${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Build and push studio web
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/studio-web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/studio-web:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/studio-web:${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build-and-push
+    if: github.event_name == 'push' || github.event.inputs.environment == 'staging'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.prompt-studio.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to staging
+        run: |
+          echo "Deploying version ${{ needs.build-and-push.outputs.version }} to staging"
+          # Add actual deployment commands here (kubectl, helm, terraform, etc.)
+          
+      - name: Run smoke tests
+        run: |
+          # Wait for deployment to be ready
+          sleep 30
+          
+          # Run basic health checks
+          curl -f https://staging-api.prompt-studio.example.com/health || exit 1
+          
+      - name: Run integration tests
+        env:
+          API_URL: https://staging-api.prompt-studio.example.com
+          API_TOKEN: ${{ secrets.STAGING_API_TOKEN }}
+        run: |
+          cd tests/integration
+          npm test
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [build-and-push, deploy-staging]
+    if: github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://prompt-studio.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create deployment issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Production Deployment: ${new Date().toISOString().split('T')[0]}`,
+              body: `## Production Deployment
+              
+              **Version:** ${{ needs.build-and-push.outputs.version }}
+              **Triggered by:** @${context.actor}
+              **Staging validation:** ✅ Passed
+              
+              ### Pre-deployment checklist:
+              - [ ] Staging tests passed
+              - [ ] No critical issues in staging
+              - [ ] Database migrations ready
+              - [ ] Rollback plan documented
+              
+              ### Post-deployment checklist:
+              - [ ] Health checks passing
+              - [ ] Monitoring alerts configured
+              - [ ] Performance metrics normal
+              - [ ] User acceptance verified`,
+              labels: ['deployment', 'production']
+            });
+            
+            core.setOutput('issue_number', issue.data.number);
+            
+      - name: Deploy to production
+        run: |
+          echo "Deploying version ${{ needs.build-and-push.outputs.version }} to production"
+          # Add actual production deployment commands here
+          
+      - name: Verify deployment
+        run: |
+          # Production health checks
+          curl -f https://api.prompt-studio.example.com/health || exit 1
+          
+      - name: Update deployment issue
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ Success' : '❌ Failed';
+            
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.create-issue.outputs.issue_number }},
+              body: `## Deployment Status: ${status}
+              
+              **Completed at:** ${new Date().toISOString()}
+              **Duration:** ${{ job.duration }}ms
+              
+              ${status === '✅ Success' ? 'Deployment completed successfully!' : 'Deployment failed. Please check logs and rollback if necessary.'}`
+            });
+
+  notify:
+    name: Notify
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: |
+            Deployment Status: ${{ job.status }}
+            Environment: ${{ github.event.inputs.environment || 'staging' }}
+            Version: ${{ needs.build-and-push.outputs.version }}
+            Actor: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

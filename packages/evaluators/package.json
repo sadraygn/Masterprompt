@@ -1,0 +1,33 @@
+{
+  "name": "@prompt-studio/evaluators",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "evaluate": "promptfoo eval",
+    "type-check": "tsc --noEmit",
+    "test:quality": "promptfoo eval -c configs/quality.yaml -o results/quality.json",
+    "test:security": "promptfoo eval -c configs/security.yaml -o results/security.json",
+    "test:regression": "promptfoo eval -c configs/regression.yaml -o results/regression.json",
+    "test:all": "npm run test:quality && npm run test:security && npm run test:regression && npm run merge-results",
+    "merge-results": "node scripts/merge-results.js",
+    "benchmark:performance": "node scripts/performance-benchmark.js",
+    "analyze:costs": "node scripts/cost-analysis.js"
+  },
+  "dependencies": {
+    "promptfoo": "^0.43.0",
+    "js-yaml": "^4.1.0",
+    "@langchain/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  }
+}

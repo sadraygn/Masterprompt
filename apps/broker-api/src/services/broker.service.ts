@@ -1,4 +1,4 @@
-import { LiteLLMService, CompletionParams } from './litellm.service.js';
+import { LiteLLMService } from './litellm.service.js';
 import { getLangfuse } from '../config/langfuse.js';
 import { mapCreativityToTemperature } from '../utils/temperature-mapper.js';
 import type { ChatCompletion } from 'openai/resources/index.js';
@@ -38,7 +38,7 @@ export class BrokerService {
       model: params.model,
       modelParameters: {
         temperature: params.temperature ?? mapCreativityToTemperature(params.creativity),
-        max_tokens: params.max_tokens,
+        max_tokens: params.max_tokens || null,
       },
       input: params.messages,
     });
@@ -60,21 +60,33 @@ export class BrokerService {
       const endTime = Date.now();
       const latencyMs = endTime - startTime;
 
-      // Update generation with output
-      generation?.end({
-        output: response.choices[0]?.message,
-        usage: {
-          promptTokens: response.usage?.prompt_tokens,
-          completionTokens: response.usage?.completion_tokens,
-          totalTokens: response.usage?.total_tokens,
-        },
-        metadata: {
-          latencyMs,
-          finishReason: response.choices[0]?.finish_reason,
-        },
-      });
-
-      return response;
+      // Handle streaming vs non-streaming responses
+      if (params.stream) {
+        // For streaming, we can't get usage data immediately
+        generation?.end({
+          metadata: {
+            latencyMs,
+            streaming: true,
+          },
+        });
+        return response as any;
+      } else {
+        const completionResponse = response as any;
+        // Update generation with output
+        generation?.end({
+          output: completionResponse.choices[0]?.message,
+          usage: {
+            promptTokens: completionResponse.usage?.prompt_tokens,
+            completionTokens: completionResponse.usage?.completion_tokens,
+            totalTokens: completionResponse.usage?.total_tokens,
+          },
+          metadata: {
+            latencyMs,
+            finishReason: completionResponse.choices[0]?.finish_reason,
+          },
+        });
+        return completionResponse;
+      }
     } catch (error) {
       generation?.end({
         level: 'ERROR',

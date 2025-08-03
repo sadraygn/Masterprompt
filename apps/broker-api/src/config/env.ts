@@ -23,6 +23,25 @@ export const env = {
   
   // CORS
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
+  
+  // Security
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+  
+  // Flowise
+  FLOWISE_API_URL: process.env.FLOWISE_API_URL || 'http://flowise:3000',
+  FLOWISE_API_KEY: process.env.FLOWISE_API_KEY || '',
+  
+  // Ollama
+  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || 'http://ollama:11434',
+  
+  // Redis
+  REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
+  
+  // SAML
+  SAML_ENABLED: process.env.SAML_ENABLED === 'true',
+  SAML_ENTRY_POINT: process.env.SAML_ENTRY_POINT || '',
+  SAML_ISSUER: process.env.SAML_ISSUER || '',
+  SAML_CERT: process.env.SAML_CERT || '',
 } as const;
 
 // Validate required env vars

@@ -1,0 +1,251 @@
+name: Scheduled Evaluation
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      evaluation_type:
+        description: 'Type of evaluation to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - performance
+          - cost
+          - quality
+          - regression
+
+jobs:
+  daily-evaluation:
+    name: Daily Evaluation Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build packages
+        run: pnpm turbo build
+
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event.inputs.evaluation_type == 'all' || github.event.inputs.evaluation_type == 'performance'
+    needs: daily-evaluation
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run performance benchmarks
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/benchmark
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd packages/evaluators
+          pnpm benchmark:performance
+          
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results-${{ github.run_id }}
+          path: packages/evaluators/results/performance/
+          
+      - name: Compare with baseline
+        run: |
+          cd packages/evaluators
+          node scripts/compare-performance.js
+
+  cost-analysis:
+    name: Cost Analysis
+    runs-on: ubuntu-latest
+    if: github.event.inputs.evaluation_type == 'all' || github.event.inputs.evaluation_type == 'cost'
+    needs: daily-evaluation
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Analyze API costs
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+        run: |
+          cd packages/evaluators
+          pnpm analyze:costs
+          
+      - name: Generate cost report
+        run: |
+          cd packages/evaluators
+          node scripts/generate-cost-report.js > cost-report.md
+          
+      - name: Upload cost report
+        uses: actions/upload-artifact@v3
+        with:
+          name: cost-report-${{ github.run_id }}
+          path: packages/evaluators/cost-report.md
+
+  quality-regression:
+    name: Quality & Regression Tests
+    runs-on: ubuntu-latest
+    if: github.event.inputs.evaluation_type == 'all' || github.event.inputs.evaluation_type == 'quality' || github.event.inputs.evaluation_type == 'regression'
+    needs: daily-evaluation
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Set up evaluation cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/promptfoo
+            packages/evaluators/.cache
+          key: ${{ runner.os }}-eval-${{ hashFiles('**/promptfooconfig.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-eval-
+            
+      - name: Run quality evaluations
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          cd packages/evaluators
+          pnpm test:quality
+          
+      - name: Run regression tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd packages/evaluators
+          pnpm test:regression
+          
+      - name: Compare with baseline
+        run: |
+          cd packages/evaluators
+          node scripts/regression-analysis.js
+
+  generate-report:
+    name: Generate Evaluation Report
+    needs: [performance-benchmarks, cost-analysis, quality-regression]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Generate consolidated report
+        run: |
+          node scripts/generate-eval-report.js > evaluation-report.md
+          
+      - name: Create issue with report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('evaluation-report.md', 'utf8');
+            
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Daily Evaluation Report - ${new Date().toISOString().split('T')[0]}`,
+              body: report,
+              labels: ['evaluation', 'automated']
+            });
+            
+            console.log(`Created issue #${issue.data.number}`);
+            
+      - name: Send notification
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "Daily Evaluation Complete",
+              attachments: [{
+                color: '${{ job.status }}' === 'success' ? 'good' : 'danger',
+                fields: [
+                  {
+                    title: "Status",
+                    value: '${{ job.status }}',
+                    short: true
+                  },
+                  {
+                    title: "Date",
+                    value: new Date().toISOString().split('T')[0],
+                    short: true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

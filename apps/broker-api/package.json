@@ -15,6 +15,7 @@
     "fastify": "^4.26.0",
     "@fastify/cors": "^9.0.0",
     "@fastify/bearer-auth": "^9.0.0",
+    "@fastify/rate-limit": "^9.0.0",
     "@fastify/swagger": "^8.14.0",
     "@fastify/swagger-ui": "^3.0.0",
     "@fastify/type-provider-typebox": "^4.0.0",
@@ -23,7 +24,14 @@
     "openai": "^4.0.0",
     "dotenv": "^16.4.0",
     "pino": "^8.18.0",
-    "pino-pretty": "^10.3.0"
+    "pino-pretty": "^10.3.0",
+    "@prompt-studio/security": "workspace:*",
+    "@prompt-studio/shared": "workspace:*",
+    "@prompt-studio/workflows": "workspace:*",
+    "@prompt-studio/auth": "workspace:*",
+    "@prompt-studio/cache": "workspace:*",
+    "@prompt-studio/websocket": "workspace:*",
+    "fastify-plugin": "^4.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

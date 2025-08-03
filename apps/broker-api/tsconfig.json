@@ -14,8 +14,17 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "composite": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "references": [
+    { "path": "../../packages/security" },
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/workflows" },
+    { "path": "../../packages/auth" },
+    { "path": "../../packages/cache" },
+    { "path": "../../packages/websocket" }
+  ]
 }

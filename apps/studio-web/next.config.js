@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   // Keep bundle size small for Fly.io
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
   },
   // Enable standalone output for containerization
   output: 'standalone',

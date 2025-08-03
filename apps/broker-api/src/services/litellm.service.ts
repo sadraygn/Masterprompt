@@ -23,7 +23,7 @@ export class LiteLLMService {
     try {
       const response = await this.client.chat.completions.create({
         model: params.model,
-        messages: params.messages,
+        messages: params.messages as any,
         temperature: params.temperature,
         max_tokens: params.max_tokens,
         stream: params.stream,

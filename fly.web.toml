@@ -1,0 +1,60 @@
+# Fly.io configuration for Studio Web
+app = "masterprompt-web"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[experimental]
+  auto_rollback = true
+
+[build]
+  dockerfile = "Dockerfile.web"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  NEXT_PUBLIC_BROKER_API_URL = "https://masterprompt-broker.fly.dev"
+  # Add other non-sensitive environment variables here
+
+[processes]
+  app = "node apps/studio-web/server.js"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 3000
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "30s"
+    restart_limit = 6
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "10s"
+    method = "get"
+    path = "/api/health"
+    protocol = "http"
+    restart_limit = 0
+    timeout = "5s"
+    tls_skip_verify = false
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256

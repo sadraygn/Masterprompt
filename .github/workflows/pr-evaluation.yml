@@ -1,0 +1,223 @@
+name: PR Evaluation
+
+on:
+  pull_request:
+    paths:
+      - 'prompts/**'
+      - 'packages/workflows/**'
+      - 'packages/evaluators/**'
+      - '.github/workflows/pr-evaluation.yml'
+
+jobs:
+  lint-and-type-check:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run linting
+        run: pnpm turbo lint
+        
+      - name: Run type checking
+        run: pnpm turbo type-check
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run unit tests
+        run: pnpm turbo test
+        
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  promptfoo-evaluation:
+    name: Promptfoo Evaluation
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Set up promptfoo cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/promptfoo
+          key: ${{ runner.os }}-promptfoo-${{ hashFiles('**/promptfooconfig.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-promptfoo-
+            
+      - name: Run Promptfoo evaluations
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          cd packages/evaluators
+          pnpm test:all
+          
+      - name: Check evaluation thresholds
+        run: |
+          cd packages/evaluators
+          node scripts/check-thresholds.js
+          
+      - name: Comment PR with results
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let resultsPath = path.join('packages/evaluators/results/latest.json');
+            let results = {};
+            
+            try {
+              results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            } catch (e) {
+              console.error('Could not read results:', e);
+              return;
+            }
+            
+            const comment = `## 🧪 Evaluation Results
+            
+            | Metric | Score | Threshold | Status |
+            |--------|-------|-----------|--------|
+            | Quality | ${results.quality?.score || 'N/A'} | 0.8 | ${results.quality?.score >= 0.8 ? '✅' : '❌'} |
+            | Security | ${results.security?.score || 'N/A'} | 0.9 | ${results.security?.score >= 0.9 ? '✅' : '❌'} |
+            | Regression | ${results.regression?.score || 'N/A'} | 0.8 | ${results.regression?.score >= 0.8 ? '✅' : '❌'} |
+            
+            ${results.failed ? '⚠️ Some evaluations failed. Please check the logs.' : ''}
+            
+            <details>
+            <summary>Detailed Results</summary>
+            
+            \`\`\`json
+            ${JSON.stringify(results, null, 2)}
+            \`\`\`
+            </details>`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  workflow-validation:
+    name: Validate Workflows
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build packages
+        run: pnpm turbo build
+        
+      - name: Validate workflow exports
+        run: |
+          cd packages/workflows
+          pnpm test:export
+          
+      - name: Test workflow execution
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd packages/workflows
+          pnpm test:integration
+
+  all-checks-passed:
+    name: All Checks Passed
+    needs: [lint-and-type-check, unit-tests, promptfoo-evaluation, security-scan, workflow-validation]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All checks passed
+        run: echo "✅ All evaluation checks passed!"

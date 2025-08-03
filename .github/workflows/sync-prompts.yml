@@ -1,0 +1,75 @@
+name: Sync Prompt Libraries
+
+on:
+  schedule:
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  sync-prompts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Awesome ChatGPT Prompts
+        run: |
+          git submodule update --remote prompt-library/awesome-prompts
+          
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r prompt-library/sync-scripts/requirements.txt
+          
+      - name: Sync PromptHub
+        run: |
+          python prompt-library/sync-scripts/pull-prompthub.py
+          
+      - name: Check for changes
+        id: check-changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: Update prompt libraries'
+          title: '🔄 Update Prompt Libraries'
+          body: |
+            ## Automated Prompt Library Update
+            
+            This PR updates the prompt libraries from external sources:
+            
+            - ✅ Updated Awesome ChatGPT Prompts submodule
+            - ✅ Synced latest prompts from PromptHub
+            
+            ### Changes
+            - Updated prompt templates and examples
+            - Added new prompt categories (if any)
+            - Sanitized any potential PII in prompts
+            
+            Please review the changes before merging.
+          branch: update-prompt-libraries
+          delete-branch: true
+          labels: |
+            prompt-library
+            automated

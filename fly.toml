@@ -1,0 +1,69 @@
+# Fly.io configuration for Broker API
+app = "masterprompt-broker"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[experimental]
+  auto_rollback = true
+
+[build]
+  dockerfile = "Dockerfile.broker"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  # Add other non-sensitive environment variables here
+
+[processes]
+  app = "node apps/broker-api/dist/server.js"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 3000
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "30s"
+    restart_limit = 6
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "10s"
+    method = "get"
+    path = "/health"
+    protocol = "http"
+    restart_limit = 0
+    timeout = "5s"
+    tls_skip_verify = false
+    [services.http_checks.headers]
+
+[[statics]]
+  guest_path = "/app/public"
+  url_prefix = "/static/"
+
+[mounts]
+  source = "prompt_studio_data"
+  destination = "/data"
+  initial_size = "1gb"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512

@@ -1,0 +1,32 @@
+{
+  "name": "@prompt-studio/cache",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/caching": "^8.3.0",
+    "@fastify/redis": "^6.1.1",
+    "cache-manager": "^5.3.2",
+    "cache-manager-ioredis-yet": "^1.2.2",
+    "fastify-plugin": "^4.5.0",
+    "ioredis": "^5.3.2",
+    "p-memoize": "^7.1.1",
+    "quick-lru": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "peerDependencies": {
+    "fastify": "^4.0.0"
+  }
+}

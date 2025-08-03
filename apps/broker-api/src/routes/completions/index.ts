@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
 import { BrokerService } from '../../services/broker.service.js';
+import { guardrailsMiddleware } from '../../middleware/guardrails-validation.js';
 
 const completionSchema = {
   body: Type.Object({
@@ -51,11 +52,12 @@ const completionsRoute: FastifyPluginAsync = async (fastify) => {
   const broker = new BrokerService();
 
   fastify.post('/chat/completions', {
-    preHandler: fastify.auth([fastify.bearerAuth]),
+    preHandler: (fastify as any).auth([(fastify as any).bearerAuth]),
     schema: completionSchema,
+    onSend: guardrailsMiddleware(['toxicity', 'pii']),
   }, async (request, reply) => {
     try {
-      const response = await broker.executePrompt(request.body);
+      const response = await broker.executePrompt(request.body as any);
       return response;
     } catch (error) {
       fastify.log.error(error);
