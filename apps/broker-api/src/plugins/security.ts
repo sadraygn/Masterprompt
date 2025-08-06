@@ -54,5 +54,5 @@ const securityPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(securityPlugin, {
   name: 'security',
-  dependencies: ['cors', 'bearer-auth']
+  dependencies: ['@fastify/cors', '@fastify/bearer-auth']
 });

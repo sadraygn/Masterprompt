@@ -52,7 +52,6 @@ const completionsRoute: FastifyPluginAsync = async (fastify) => {
   const broker = new BrokerService();
 
   fastify.post('/chat/completions', {
-    preHandler: (fastify as any).auth([(fastify as any).bearerAuth]),
     schema: completionSchema,
     onSend: guardrailsMiddleware(['toxicity', 'pii']),
   }, async (request, reply) => {

@@ -215,7 +215,7 @@ importers:
         specifier: ^7.1.0
         version: 7.1.1(express-session@1.18.2)
       fastify:
-        specifier: ^4.0.0
+        specifier: ^3.0.0
         version: 3.29.5
       fastify-passport:
         specifier: ^0.6.0

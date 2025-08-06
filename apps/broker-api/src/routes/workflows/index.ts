@@ -86,7 +86,6 @@ const workflowsRoute: FastifyPluginAsync = async (fastify) => {
 
   // Execute workflow
   fastify.post('/execute', {
-    preHandler: (fastify as any).auth([(fastify as any).bearerAuth]),
     schema: executeSchema,
   }, async (request, reply) => {
     const startTime = Date.now();
@@ -138,7 +137,6 @@ const workflowsRoute: FastifyPluginAsync = async (fastify) => {
 
   // Sync with Flowise
   fastify.post('/sync', {
-    preHandler: (fastify as any).auth([(fastify as any).bearerAuth]),
     schema: syncSchema,
   }, async (request, reply) => {
     try {
@@ -229,7 +227,6 @@ const workflowsRoute: FastifyPluginAsync = async (fastify) => {
 
   // List Flowise chatflows
   fastify.get('/flowise/chatflows', {
-    preHandler: (fastify as any).auth([(fastify as any).bearerAuth]),
   }, async (request, reply) => {
     try {
       const chatflows = await flowiseService.getChatflows();
