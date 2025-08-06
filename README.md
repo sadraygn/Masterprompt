@@ -177,6 +177,14 @@ curl http://localhost:4000/health
 
 ## 🚀 Deployment
 
+### Lovable.dev Deployment (Recommended)
+Deploy securely to Lovable.dev with environment variable protection:
+```bash
+# See complete deployment guide
+📖 [Lovable.dev Deployment Guide](./LOVABLE_DEPLOYMENT.md)
+```
+🔒 **API keys are safely secured** - never exposed in public repositories!
+
 ### Docker Production Build
 ```bash
 # Build images

@@ -2,10 +2,16 @@
 node_modules/
 .pnpm-store/
 
-# Environment files
+# Environment files - NEVER commit these!
 .env
+.env.*
 .env.local
-.env.*.local
+.env.production
+.env.development
+.env.test
+*.env
+infra/.env
+infra/.env.*
 
 # Build outputs
 dist/
