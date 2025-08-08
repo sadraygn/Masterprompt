@@ -4,7 +4,7 @@ async function testProviders() {
   console.log('🧪 Testing All Configured Providers\n');
   
   const client = new OpenAI({
-    apiKey: 'sk-1234567890abcdef', // Uses LiteLLM master key
+    apiKey: 'sk-9cd021bb22d78b0262ecfa219f73075a346b0eff421658f69b80ffd1932e1993', // Uses LiteLLM master key
     baseURL: 'http://localhost:8001/v1',
   });
 
@@ -12,8 +12,8 @@ async function testProviders() {
   const providers = [
     { model: 'gpt-3.5-turbo', name: 'OpenAI GPT-3.5', requiresKey: 'OPENAI_API_KEY' },
     { model: 'gpt-4', name: 'OpenAI GPT-4', requiresKey: 'OPENAI_API_KEY' },
-    { model: 'gemini-pro', name: 'Google Gemini Pro', requiresKey: 'GOOGLE_API_KEY' },
-    { model: 'gemini-pro-vision', name: 'Google Gemini Pro Vision', requiresKey: 'GOOGLE_API_KEY' },
+    { model: 'gemini-1.5-flash', name: 'Google Gemini 1.5 Flash', requiresKey: 'GOOGLE_API_KEY' },
+    { model: 'gemini-1.5-pro', name: 'Google Gemini 1.5 Pro', requiresKey: 'GOOGLE_API_KEY' },
     { model: 'llama3', name: 'Ollama Llama 3 (Local)', requiresKey: 'None (Local)' },
     { model: 'codellama', name: 'Ollama CodeLlama (Local)', requiresKey: 'None (Local)' }
   ];

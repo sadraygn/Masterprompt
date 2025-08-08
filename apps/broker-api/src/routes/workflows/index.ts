@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
-import { WorkflowRegistry, WorkflowExecutor } from '@prompt-studio/workflows';
+import { WorkflowRegistry, WorkflowExecutor, registerBuiltinWorkflows } from '@prompt-studio/workflows';
 import { FlowiseService } from '../../services/flowise.service.js';
 
 const workflowSchema = {
@@ -29,6 +29,9 @@ const workflowsRoute: FastifyPluginAsync = async (fastify) => {
   const registry = WorkflowRegistry.getInstance();
   const executor = new WorkflowExecutor();
   const flowiseService = new FlowiseService();
+
+  // Register built-in workflows
+  registerBuiltinWorkflows();
 
   // Enable hot reloading in development
   if (process.env.NODE_ENV !== 'production') {

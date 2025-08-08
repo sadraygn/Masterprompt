@@ -60,7 +60,7 @@ const completionsRoute: FastifyPluginAsync = async (fastify) => {
       return response;
     } catch (error) {
       fastify.log.error(error);
-      reply.status(500).send({
+      return reply.status(500).send({
         error: {
           message: error instanceof Error ? error.message : 'Internal server error',
           type: 'internal_error',

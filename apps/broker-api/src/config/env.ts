@@ -1,6 +1,9 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
+// Load .env file from broker-api directory first
+config({ path: resolve(process.cwd(), '.env') });
+
 // Load environment variables (for local development only)
 // In production (Lovable.dev), environment variables are injected directly
 if (process.env.NODE_ENV === 'development') {

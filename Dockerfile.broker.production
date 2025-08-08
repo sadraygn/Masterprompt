@@ -1,0 +1,122 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@8 --activate
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/broker-api/package.json ./apps/broker-api/
+
+# Copy all package.json files with correct structure
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/cache/package.json ./packages/cache/
+COPY packages/evaluators/package.json ./packages/evaluators/
+COPY packages/security/package.json ./packages/security/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/websocket/package.json ./packages/websocket/
+COPY packages/workflows/package.json ./packages/workflows/
+
+# Install all dependencies
+RUN pnpm install --no-frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build all packages and the broker API
+RUN pnpm --filter '@prompt-studio/broker-api' --filter './packages/*' build
+
+# Production dependencies stage
+FROM node:20-alpine AS deps
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@8 --activate
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/broker-api/package.json ./apps/broker-api/
+
+# Copy all package.json files with correct structure
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/cache/package.json ./packages/cache/
+COPY packages/evaluators/package.json ./packages/evaluators/
+COPY packages/security/package.json ./packages/security/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/websocket/package.json ./packages/websocket/
+COPY packages/workflows/package.json ./packages/workflows/
+
+# Install only production dependencies
+RUN pnpm install --no-frozen-lockfile --prod
+
+# Final production stage
+FROM node:20-alpine AS production
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy node_modules from deps stage
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages/auth/node_modules ./packages/auth/node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages/cache/node_modules ./packages/cache/node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages/evaluators/node_modules ./packages/evaluators/node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages/security/node_modules ./packages/security/node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages/websocket/node_modules ./packages/websocket/node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/packages/workflows/node_modules ./packages/workflows/node_modules
+COPY --from=deps --chown=nodejs:nodejs /app/apps/broker-api/node_modules ./apps/broker-api/node_modules
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nodejs:nodejs /app/apps/broker-api/dist ./apps/broker-api/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/auth/dist ./packages/auth/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/cache/dist ./packages/cache/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/evaluators/dist ./packages/evaluators/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/security/dist ./packages/security/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/websocket/dist ./packages/websocket/dist
+COPY --from=builder --chown=nodejs:nodejs /app/packages/workflows/dist ./packages/workflows/dist
+
+# Copy package files
+COPY --chown=nodejs:nodejs package.json ./
+COPY --chown=nodejs:nodejs apps/broker-api/package.json ./apps/broker-api/
+COPY --chown=nodejs:nodejs packages/auth/package.json ./packages/auth/
+COPY --chown=nodejs:nodejs packages/cache/package.json ./packages/cache/
+COPY --chown=nodejs:nodejs packages/evaluators/package.json ./packages/evaluators/
+COPY --chown=nodejs:nodejs packages/security/package.json ./packages/security/
+COPY --chown=nodejs:nodejs packages/shared/package.json ./packages/shared/
+COPY --chown=nodejs:nodejs packages/websocket/package.json ./packages/websocket/
+COPY --chown=nodejs:nodejs packages/workflows/package.json ./packages/workflows/
+
+# Copy any runtime configuration files
+COPY --chown=nodejs:nodejs apps/broker-api/src/config ./apps/broker-api/dist/config
+
+# Create necessary directories
+RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
+
+# Set production environment
+ENV NODE_ENV=production
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "apps/broker-api/dist/server.js"]

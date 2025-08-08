@@ -29,10 +29,11 @@ export interface CacheOptions {
 }
 
 export class CacheService {
-  private redisCache!: Cache;
+  private redisCache?: Cache;
   private memoryCache: QuickLRU<string, any>;
   private config: CacheConfig;
   private tagStore: Map<string, Set<string>>;
+  private redisAvailable: boolean = false;
 
   constructor(config: CacheConfig) {
     this.config = config;
@@ -49,15 +50,41 @@ export class CacheService {
   }
 
   private async initializeRedisCache() {
-    const redisClient = new Redis(this.config.redis.url);
-    
-    this.redisCache = await caching(
-      redisStore,
-      {
-        client: redisClient,
-        ttl: this.config.ttl.default,
-      }
-    );
+    try {
+      const redisClient = new Redis(this.config.redis.url, {
+        maxRetriesPerRequest: 3,
+        retryStrategy: (times) => {
+          if (times > 3) return null;
+          return Math.min(times * 50, 2000);
+        },
+        enableOfflineQueue: false,
+      });
+      
+      redisClient.on('error', (error) => {
+        console.warn('[CacheService] Redis connection error:', error.message);
+        this.redisAvailable = false;
+      });
+      
+      redisClient.on('connect', () => {
+        console.log('[CacheService] Redis connected successfully');
+        this.redisAvailable = true;
+      });
+      
+      this.redisCache = await caching(
+        redisStore,
+        {
+          client: redisClient,
+          ttl: this.config.ttl.default,
+        }
+      );
+      
+      // Test connection
+      await redisClient.ping();
+      this.redisAvailable = true;
+    } catch (error) {
+      console.warn('[CacheService] Redis initialization failed, using memory cache only:', error);
+      this.redisAvailable = false;
+    }
   }
 
   /**
@@ -82,15 +109,23 @@ export class CacheService {
       return this.memoryCache.get(key) as T;
     }
 
-    // Check Redis cache
-    const value = await this.redisCache.get<T>(key);
-    
-    if (value !== undefined) {
-      // Store in memory cache for faster subsequent access
-      this.memoryCache.set(key, value);
+    // Check Redis cache if available
+    if (this.redisAvailable && this.redisCache) {
+      try {
+        const value = await this.redisCache.get<T>(key);
+        
+        if (value !== undefined) {
+          // Store in memory cache for faster subsequent access
+          this.memoryCache.set(key, value);
+        }
+        
+        return value;
+      } catch (error) {
+        console.warn('[CacheService] Redis get error:', error);
+      }
     }
 
-    return value;
+    return undefined;
   }
 
   /**
@@ -99,9 +134,17 @@ export class CacheService {
   async set<T>(key: string, value: T, options?: CacheOptions): Promise<void> {
     const ttl = options?.ttl || this.config.ttl.default;
     
-    // Set in both caches
+    // Always set in memory cache
     this.memoryCache.set(key, value);
-    await this.redisCache.set(key, value, ttl);
+    
+    // Set in Redis if available
+    if (this.redisAvailable && this.redisCache) {
+      try {
+        await this.redisCache.set(key, value, ttl);
+      } catch (error) {
+        console.warn('[CacheService] Redis set error:', error);
+      }
+    }
 
     // Handle tags
     if (options?.tags) {
@@ -119,7 +162,14 @@ export class CacheService {
    */
   async del(key: string): Promise<void> {
     this.memoryCache.delete(key);
-    await this.redisCache.del(key);
+    
+    if (this.redisAvailable && this.redisCache) {
+      try {
+        await this.redisCache.del(key);
+      } catch (error) {
+        console.warn('[CacheService] Redis delete error:', error);
+      }
+    }
   }
 
   /**
@@ -147,7 +197,15 @@ export class CacheService {
    */
   async clear(): Promise<void> {
     this.memoryCache.clear();
-    await this.redisCache.reset();
+    
+    if (this.redisAvailable && this.redisCache) {
+      try {
+        await this.redisCache.reset();
+      } catch (error) {
+        console.warn('[CacheService] Redis clear error:', error);
+      }
+    }
+    
     this.tagStore.clear();
   }
 

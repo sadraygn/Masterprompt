@@ -18,7 +18,9 @@ echo ""
 
 # Load environment variables
 if [ -f "infra/.env" ]; then
-    export $(cat infra/.env | grep -v '^#' | xargs)
+    set -a
+    source infra/.env
+    set +a
 else
     echo -e "${RED}Error: infra/.env file not found${NC}"
     exit 1

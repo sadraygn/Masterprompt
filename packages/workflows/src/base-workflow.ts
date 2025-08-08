@@ -16,6 +16,7 @@ export abstract class BaseWorkflow implements IWorkflow {
   config: WorkflowConfig;
   chain!: Runnable;
   protected context?: WorkflowContext;
+  private chainInitialized: boolean = false;
   
   constructor(metadata: WorkflowMetadata, config: Partial<WorkflowConfig> = {}) {
     this.metadata = metadata;
@@ -29,8 +30,8 @@ export abstract class BaseWorkflow implements IWorkflow {
       cache: config.cache ?? true,
     };
     
-    // Initialize the chain in the constructor
-    this.initializeChain();
+    // Delay chain initialization until first use
+    // this.initializeChain();
   }
   
   /**
@@ -40,11 +41,24 @@ export abstract class BaseWorkflow implements IWorkflow {
   protected abstract initializeChain(): void;
   
   /**
+   * Ensure chain is initialized
+   */
+  protected ensureChainInitialized(): void {
+    if (!this.chainInitialized) {
+      this.initializeChain();
+      this.chainInitialized = true;
+    }
+  }
+
+  /**
    * Execute the workflow with given input
    */
   async execute(input: WorkflowInput): Promise<WorkflowOutput> {
     const startTime = Date.now();
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Ensure chain is initialized before execution
+    this.ensureChainInitialized();
     
     // Create execution context
     this.context = {
@@ -151,6 +165,9 @@ export abstract class BaseWorkflow implements IWorkflow {
   protected createLLM(overrides?: Partial<WorkflowConfig>) {
     const config = { ...this.config, ...overrides };
     
+    // Use environment variable or a default API key
+    const apiKey = process.env.OPENAI_API_KEY || 'sk-dummy-key-for-initialization';
+    
     return new ChatOpenAI({
       modelName: config.model,
       temperature: config.temperature,
@@ -158,6 +175,7 @@ export abstract class BaseWorkflow implements IWorkflow {
       streaming: config.streaming,
       timeout: config.timeout,
       maxRetries: config.retries,
+      openAIApiKey: apiKey,
     });
   }
   

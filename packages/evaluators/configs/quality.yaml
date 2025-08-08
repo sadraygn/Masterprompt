@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: Quality Evaluation Suite
+
+providers:
+  - id: openai:gpt-3.5-turbo
+    config:
+      apiKey: ${OPENAI_API_KEY}
+      
+prompts:
+  - "Answer this question: {{question}}"
+
+tests:
+  - vars:
+      question: "What is 2+2?"
+    assert:
+      - type: contains
+        value: "4"
+        
+  - vars:
+      question: "What is the capital of France?"
+    assert:
+      - type: contains
+        value: "Paris"
+        
+  - vars:
+      question: "Write a simple Python function to add two numbers"
+    assert:
+      - type: contains
+        value: "def"
+      - type: contains  
+        value: "return"
