@@ -1,60 +1,60 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { WorkflowSidebar } from '@/components/workflow-builder/WorkflowSidebar';
+import { WorkflowList } from '@/components/workflow-builder/WorkflowList';
+import { WorkflowRunner } from '@/components/workflow-builder/WorkflowRunner';
 import { FlowiseEmbed } from '@/components/workflow-builder/FlowiseEmbed';
-import { SyncIndicator } from '@/components/workflow-builder/SyncIndicator';
 
 export default function AdvancedPage() {
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [isFlowiseWorkflow, setIsFlowiseWorkflow] = useState(false);
+
+  // Check if selected workflow is a Flowise workflow (has UUID format)
+  useEffect(() => {
+    if (selectedWorkflow) {
+      // UUID format check for Flowise workflows
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedWorkflow);
+      setIsFlowiseWorkflow(isUUID);
+    }
+  }, [selectedWorkflow]);
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <WorkflowSidebar 
-        onSelectWorkflow={setSelectedWorkflow}
-        selectedWorkflow={selectedWorkflow}
-      />
+      {/* Sidebar with Workflow List */}
+      <div className="w-80 border-r border-gray-200">
+        <WorkflowList 
+          selectedWorkflow={selectedWorkflow}
+          onSelectWorkflow={setSelectedWorkflow}
+        />
+      </div>
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-4 flex items-center justify-between">
+          <div className="px-6 py-4">
             <h1 className="text-2xl font-semibold text-gray-900">
-              Visual Workflow Editor
+              Workflow Engine
             </h1>
-            <div className="flex items-center gap-4">
-              <SyncIndicator 
-                isSyncing={isSyncing}
-                lastSync={lastSync}
-              />
-              <button
-                onClick={() => {/* TODO: Implement sync */}}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Sync with Code
-              </button>
-            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              LangChain LCEL workflows with optional Flowise visual editing
+            </p>
           </div>
         </header>
         
-        {/* Flowise Iframe */}
-        <main className="flex-1 p-6">
+        {/* Workflow Content */}
+        <main className="flex-1 p-6 overflow-auto">
           {selectedWorkflow ? (
-            <FlowiseEmbed 
-              workflowId={selectedWorkflow}
-              onSync={(data) => {
-                setIsSyncing(true);
-                // TODO: Implement sync logic
-                setTimeout(() => {
-                  setIsSyncing(false);
-                  setLastSync(new Date());
-                }, 2000);
-              }}
-            />
+            isFlowiseWorkflow ? (
+              <FlowiseEmbed 
+                workflowId={selectedWorkflow}
+                onSync={(data) => {
+                  console.log('Syncing Flowise workflow:', data);
+                }}
+              />
+            ) : (
+              <WorkflowRunner workflowId={selectedWorkflow} />
+            )
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
