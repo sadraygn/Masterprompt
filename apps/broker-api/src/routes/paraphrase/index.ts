@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
 import { OllamaService } from '../../services/ollama.service.js';
+import { paraphraseHistoryRepository } from '../../repositories/index.js';
 
 const paraphraseSchema = {
   body: Type.Object({
@@ -75,6 +76,22 @@ const paraphraseRoute: FastifyPluginAsync = async (fastify) => {
         textLength: text.length,
         style,
       });
+
+      // Save to history
+      const { error: saveError } = await paraphraseHistoryRepository.saveParaphrase(
+        text,
+        paraphrased,
+        {
+          style,
+          model: 'llama3:8b',
+          userId: (request as any).userId,
+          metadata: { latency },
+        }
+      );
+      
+      if (saveError) {
+        fastify.log.warn('Failed to save paraphrase history:', saveError);
+      }
 
       return {
         original: text,

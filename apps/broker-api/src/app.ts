@@ -105,6 +105,7 @@ export async function buildApp() {
   await fastify.register(import('./routes/models/index.js'), { prefix: '/v1' });
   await fastify.register(import('./routes/workflows/index.js'), { prefix: '/v1/workflows' });
   await fastify.register(import('./routes/paraphrase/index.js'), { prefix: '/v1/paraphrase' });
+  await fastify.register(import('./routes/prompts/index.js'), { prefix: '/v1/prompts' });
 
   // Add workflow event broadcasting
   fastify.addHook('onResponse', async (request, reply) => {

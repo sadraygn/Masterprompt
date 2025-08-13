@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
 import { WorkflowRegistry, WorkflowExecutor, registerBuiltinWorkflows } from '@prompt-studio/workflows';
 import { FlowiseService } from '../../services/flowise.service.js';
+import { workflowsRepository, evaluationsRepository } from '../../repositories/index.js';
 
 const workflowSchema = {
   params: Type.Object({
@@ -41,8 +42,51 @@ const workflowsRoute: FastifyPluginAsync = async (fastify) => {
   // List all workflows
   fastify.get('/', async (request, reply) => {
     try {
-      const workflows = registry.list();
-      return workflows;
+      // Get workflows from registry (in-memory)
+      const registryWorkflows = registry.list();
+      
+      // Try to get workflows from database
+      const { data: dbWorkflows, error: dbError } = await workflowsRepository.findActive();
+      
+      if (dbError) {
+        fastify.log.warn('Failed to fetch workflows from database:', dbError);
+      }
+      
+      // Merge workflows from both sources
+      const workflowMap = new Map();
+      
+      // Add registry workflows
+      registryWorkflows.forEach(w => workflowMap.set(w.id, { ...w, source: 'registry' }));
+      
+      // Add/update with database workflows
+      if (dbWorkflows) {
+        dbWorkflows.forEach(w => {
+          if (workflowMap.has(w.name)) {
+            // Update with database metadata
+            const existing = workflowMap.get(w.name);
+            workflowMap.set(w.name, {
+              ...existing,
+              dbId: w.id,
+              updatedAt: w.updated_at,
+              source: 'both',
+            });
+          } else {
+            // Add database-only workflow
+            workflowMap.set(w.name, {
+              id: w.name,
+              name: w.name,
+              description: w.description,
+              config: w.config,
+              dbId: w.id,
+              source: 'database',
+              createdAt: w.created_at,
+              updatedAt: w.updated_at,
+            });
+          }
+        });
+      }
+      
+      return Array.from(workflowMap.values());
     } catch (error) {
       fastify.log.error(error);
       reply.status(500).send({
@@ -111,11 +155,30 @@ const workflowsRoute: FastifyPluginAsync = async (fastify) => {
         },
       });
       
+      const executionTime = Date.now() - startTime;
+      
+      // Save evaluation to database
+      const evaluationData = {
+        workflow_id: workflowId,
+        input_data: input,
+        output_data: result,
+        metrics: {
+          executionTime,
+          success: true,
+        },
+        user_id: (request as any).userId,
+      };
+      
+      const { error: saveError } = await evaluationsRepository.create(evaluationData);
+      if (saveError) {
+        fastify.log.warn('Failed to save evaluation:', saveError);
+      }
+      
       // Broadcast workflow completed event
       fastify.broadcastWorkflowEvent(workflowId, 'completed', {
         timestamp: new Date(),
         result,
-        executionTime: Date.now() - startTime,
+        executionTime,
       });
       
       return result;
