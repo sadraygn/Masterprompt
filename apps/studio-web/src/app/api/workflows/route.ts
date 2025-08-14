@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 
-const BROKER_API_URL = process.env.BROKER_API_URL || 'http://localhost:4000';
-const API_TOKEN = process.env.API_BEARER_TOKEN || 'bearer-token-change-me';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hebgfllpnrsqvcrgnqhp.supabase.co';
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlYmdmbGxwbnJzcXZjcmducWhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMjQ3MzksImV4cCI6MjA3MDYwMDczOX0.T7IUZiZcVakPsCWSCYSYfRGtuCxCKk3gxTuD5we8svE';
 
 export async function GET() {
   try {
-    const response = await fetch(`${BROKER_API_URL}/v1/workflows`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/workflows`, {
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
       },
     });
 
@@ -35,25 +36,65 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    const response = await fetch(`${BROKER_API_URL}/v1/workflows`, {
+    // Normalize workflow ID - add '-workflow' suffix if not present
+    let workflowId = body.workflowId || body.id;
+    if (workflowId && !workflowId.endsWith('-workflow')) {
+      workflowId = `${workflowId}-workflow`;
+    }
+    
+    // Transform input based on workflow type
+    let inputData = {};
+    if (typeof body.input === 'string') {
+      // For string input, use it as prompt/text
+      inputData = { 
+        prompt: body.input,
+        text: body.input,
+        input: body.input 
+      };
+    } else if (body.input && typeof body.input === 'object') {
+      inputData = body.input;
+    } else {
+      inputData = { input: body.input || '' };
+    }
+    
+    // Merge parameters into config
+    const config = {
+      ...(body.config || {}),
+      ...(body.parameters || {}),
+    };
+    
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/workflows/execute`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        workflowId,
+        input: inputData,
+        config
+      }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create workflow');
+      const errorText = await response.text();
+      console.error('Workflow execution failed:', errorText);
+      throw new Error('Failed to execute workflow');
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // Transform response to match frontend expectations
+    const result = data.output || data.summary || data.result || JSON.stringify(data);
+    
+    return NextResponse.json({
+      result,
+      ...data
+    });
   } catch (error) {
-    console.error('Error creating workflow:', error);
+    console.error('Error executing workflow:', error);
     return NextResponse.json(
-      { error: 'Failed to create workflow' },
+      { error: 'Failed to execute workflow' },
       { status: 500 }
     );
   }

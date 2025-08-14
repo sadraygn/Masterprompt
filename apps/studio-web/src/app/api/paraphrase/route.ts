@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
 
-const BROKER_API_URL = process.env.BROKER_API_URL || 'http://localhost:4000';
-const API_TOKEN = process.env.API_BEARER_TOKEN || 'bearer-token-change-me';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hebgfllpnrsqvcrgnqhp.supabase.co';
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlYmdmbGxwbnJzcXZjcmducWhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMjQ3MzksImV4cCI6MjA3MDYwMDczOX0.T7IUZiZcVakPsCWSCYSYfRGtuCxCKk3gxTuD5we8svE';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    const response = await fetch(`${BROKER_API_URL}/v1/paraphrase`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/paraphrase`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),

@@ -3,7 +3,11 @@
 ## Migration Status
 **Date**: 2025-01-13  
 **Version**: 1.0.0  
-**Status**: IMPLEMENTED
+**Status**: ✅ DEPLOYED TO PRODUCTION
+
+**Supabase Project**: https://hebgfllpnrsqvcrgnqhp.supabase.co  
+**Database**: PostgreSQL 17.4  
+**Migration Applied**: 2025-01-13 via `apply-migration-safe.js`
 
 ## Changes Applied
 
