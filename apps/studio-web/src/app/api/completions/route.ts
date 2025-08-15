@@ -101,12 +101,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Completions API error:', error);
     
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
       { 
         error: { 
           message: 'Failed to connect to Supabase Edge Function', 
           type: 'connection_error',
-          details: error.message 
+          details: errorMessage 
         } 
       },
       { status: 500 }

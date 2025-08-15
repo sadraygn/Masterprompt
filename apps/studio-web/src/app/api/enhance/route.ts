@@ -77,12 +77,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Enhancement API error:', error);
     
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
       { 
         error: { 
           message: 'Failed to enhance prompt', 
           type: 'internal_error',
-          details: error.message 
+          details: errorMessage 
         } 
       },
       { status: 500 }
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
 }
 
 // OPTIONS handler for CORS
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

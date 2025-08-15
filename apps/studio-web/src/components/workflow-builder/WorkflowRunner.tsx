@@ -41,7 +41,8 @@ export function WorkflowRunner({ workflowId }: WorkflowRunnerProps) {
         setOutput(data.result || 'No output generated');
       }
     } catch (error) {
-      setOutput(`Error running workflow: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setOutput(`Error running workflow: ${errorMessage}`);
     } finally {
       setIsRunning(false);
     }

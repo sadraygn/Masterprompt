@@ -62,7 +62,8 @@ export function PromptEnhancer({
         onEnhanced(data.enhanced, data);
       }
     } catch (error) {
-      setError(`Enhancement error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(`Enhancement error: ${errorMessage}`);
     } finally {
       setIsEnhancing(false);
     }
