@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { LuxuryButton } from '@/components/ui/LuxuryButton';
+import { LuxuryCard } from '@/components/ui/LuxuryCard';
+import { GradientText } from '@/components/ui/GradientText';
 
 interface PromptEnhancerProps {
   originalPrompt: string;
@@ -88,13 +91,13 @@ export function PromptEnhancer({
   };
 
   return (
-    <div className={`bg-gray-800 rounded-lg p-6 border border-gray-700 ${className}`}>
+    <LuxuryCard variant="glass" padding="md" className={className}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">
+          <GradientText as="h3" size="lg" variant="rainbow">
             🧪 Prompt Enhancement Settings
-          </h3>
+          </GradientText>
         </div>
 
         {/* Enhancement Controls */}
@@ -147,10 +150,14 @@ export function PromptEnhancer({
         </div>
 
         {/* Enhancement Button */}
-        <button
+        <LuxuryButton
           onClick={handleEnhance}
           disabled={isEnhancing || !originalPrompt.trim()}
-          className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+          variant="glow"
+          className="w-full"
+          gradientFrom="from-purple-600"
+          gradientVia="via-violet-600"
+          gradientTo="to-blue-600"
         >
           {isEnhancing ? (
             <span className="flex items-center justify-center">
@@ -163,7 +170,7 @@ export function PromptEnhancer({
           ) : (
             '✨ Enhance Prompt'
           )}
-        </button>
+        </LuxuryButton>
 
         {/* Error Display */}
         {error && (
@@ -173,6 +180,6 @@ export function PromptEnhancer({
         )}
 
       </div>
-    </div>
+    </LuxuryCard>
   );
 }

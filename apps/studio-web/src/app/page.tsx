@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { PromptEnhancer } from '@/components/prompt-enhancer/PromptEnhancer'
+import { LuxuryButton } from '@/components/ui/LuxuryButton'
+import { GlassButton } from '@/components/ui/GlassButton'
+import { LuxuryCard, LuxuryCardContent } from '@/components/ui/LuxuryCard'
+import { GradientText } from '@/components/ui/GradientText'
 
 interface Model {
   id: string
@@ -63,37 +67,34 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
+      <header className="border-b border-white/10 bg-white/5 backdrop-blur-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <GradientText as="h1" size="2xl" variant="cosmic" animate>
                 🚀 Prompt Enhancement Studio
-              </h1>
-              <p className="text-gray-400 text-sm mt-1">
+              </GradientText>
+              <p className="text-gray-300/80 text-sm mt-1">
                 AI-Powered Prompt Optimization • Multiple Enhancement Models
               </p>
             </div>
             <nav className="flex space-x-4">
-              <Link
-                href="/paraphrase"
-                className="px-4 py-2 text-gray-300 hover:text-white transition"
-              >
-                Paraphrase
+              <Link href="/paraphrase">
+                <GlassButton size="sm" intensity="light">
+                  Paraphrase
+                </GlassButton>
               </Link>
-              <Link
-                href="/advanced"
-                className="px-4 py-2 text-gray-300 hover:text-white transition"
-              >
-                Workflows
+              <Link href="/advanced">
+                <GlassButton size="sm" intensity="light">
+                  Workflows
+                </GlassButton>
               </Link>
-              <Link
-                href="/library"
-                className="px-4 py-2 text-gray-300 hover:text-white transition"
-              >
-                Library
+              <Link href="/library">
+                <GlassButton size="sm" intensity="light">
+                  Library
+                </GlassButton>
               </Link>
             </nav>
           </div>
@@ -106,7 +107,7 @@ export default function Home() {
           {/* Left Panel - Input */}
           <div className="space-y-6">
             {/* Model Selectors */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <LuxuryCard variant="glass" padding="md">
               <div className="space-y-4">
                 {/* Enhancement Model Selector */}
                 <div>
@@ -171,10 +172,10 @@ export default function Home() {
                   </p>
                 </div>
               </div>
-            </div>
+            </LuxuryCard>
 
             {/* Controls */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <LuxuryCard variant="glass" padding="md">
               <div className="space-y-4">
                 {/* Creativity Slider */}
                 <div>
@@ -215,10 +216,10 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            </div>
+            </LuxuryCard>
 
             {/* Prompt Input */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <LuxuryCard variant="glass" padding="md">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Original Prompt
               </label>
@@ -233,7 +234,7 @@ export default function Home() {
                   ~{tokens.input} tokens
                 </div>
               </div>
-            </div>
+            </LuxuryCard>
 
             {/* Prompt Enhancer */}
             {showEnhancer && (
@@ -252,7 +253,7 @@ export default function Home() {
           <div className="space-y-6">
             {/* Enhancement Info */}
             {enhancementData && (
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <LuxuryCard variant="glass" padding="sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-400">Enhanced By</p>
@@ -281,29 +282,29 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </LuxuryCard>
             )}
 
             {/* Enhanced Prompt Output */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 flex-1">
+            <LuxuryCard variant="glass" padding="md" className="flex-1">
               <div className="flex items-center justify-between mb-4">
                 <label className="text-sm font-medium text-gray-300">
                   {enhancedPrompt ? 'Enhanced Prompt' : 'Enhanced Prompt Will Appear Here'}
                 </label>
                 {enhancedPrompt && (
                   <div className="flex space-x-2">
-                    <button
+                    <GlassButton
+                      size="sm"
                       onClick={() => navigator.clipboard.writeText(enhancedPrompt)}
-                      className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition"
                     >
                       Copy
-                    </button>
-                    <button
+                    </GlassButton>
+                    <GlassButton
+                      size="sm"
                       onClick={clearEnhancement}
-                      className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition"
                     >
                       Clear
-                    </button>
+                    </GlassButton>
                   </div>
                 )}
               </div>
@@ -329,19 +330,20 @@ export default function Home() {
                   <span>Strategy: {enhancementData?.strategy}</span>
                 </div>
               )}
-            </div>
+            </LuxuryCard>
 
             {/* Quick Actions */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <LuxuryCard variant="glass" padding="sm">
               <p className="text-sm font-medium text-gray-300 mb-3">Quick Actions</p>
               <div className="grid grid-cols-2 gap-2">
-                <button 
+                <GlassButton 
+                  size="sm"
                   onClick={() => setPrompt('')}
-                  className="px-3 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 text-sm transition"
                 >
                   Clear Input
-                </button>
-                <button 
+                </GlassButton>
+                <GlassButton 
+                  size="sm"
                   onClick={() => {
                     if (enhancedPrompt) {
                       setPrompt(enhancedPrompt)
@@ -349,26 +351,25 @@ export default function Home() {
                     }
                   }}
                   disabled={!enhancedPrompt}
-                  className="px-3 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Use as Input
-                </button>
-                <button 
+                </GlassButton>
+                <GlassButton 
+                  size="sm"
                   onClick={() => setShowEnhancer(!showEnhancer)}
-                  className="px-3 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 text-sm transition"
                 >
                   {showEnhancer ? 'Hide' : 'Show'} Settings
-                </button>
-                <button className="px-3 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 text-sm transition">
+                </GlassButton>
+                <GlassButton size="sm">
                   Save Prompt
-                </button>
+                </GlassButton>
               </div>
-            </div>
+            </LuxuryCard>
           </div>
         </div>
 
         {/* Status Bar */}
-        <div className="mt-8 bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <LuxuryCard variant="glass" padding="sm" className="mt-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <div className="flex items-center">
@@ -384,7 +385,7 @@ export default function Home() {
               Prompt Enhancement Studio v2.0
             </div>
           </div>
-        </div>
+        </LuxuryCard>
       </main>
     </div>
   )

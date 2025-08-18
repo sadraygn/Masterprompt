@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { LuxuryButton } from '@/components/ui/LuxuryButton'
+import { GlassButton } from '@/components/ui/GlassButton'
+import { LuxuryCard, LuxuryCardContent } from '@/components/ui/LuxuryCard'
+import { GradientText } from '@/components/ui/GradientText'
 
 interface Prompt {
   id: string
@@ -103,24 +107,23 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
+      <header className="border-b border-white/10 bg-white/5 backdrop-blur-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <GradientText as="h1" size="2xl" variant="ocean" animate>
                 📚 Prompt Library
-              </h1>
-              <p className="text-gray-400 text-sm mt-1">
+              </GradientText>
+              <p className="text-gray-300/80 text-sm mt-1">
                 Community-curated prompts from Awesome-ChatGPT & PromptHub
               </p>
             </div>
-            <Link
-              href="/"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Back to Studio
+            <Link href="/">
+              <LuxuryButton size="sm" variant="gradient" gradientFrom="from-blue-500" gradientVia="via-cyan-500" gradientTo="to-teal-500">
+                Back to Studio
+              </LuxuryButton>
             </Link>
           </div>
         </div>
@@ -131,18 +134,18 @@ export default function LibraryPage() {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Search */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <LuxuryCard variant="glass" padding="sm">
               <input
                 type="text"
                 placeholder="Search prompts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 transition-all duration-300"
               />
-            </div>
+            </LuxuryCard>
 
             {/* Categories */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <LuxuryCard variant="glass" padding="sm">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Categories</h3>
               <div className="space-y-2">
                 {CATEGORIES.map(category => (
@@ -159,10 +162,10 @@ export default function LibraryPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </LuxuryCard>
 
             {/* Sources */}
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <LuxuryCard variant="glass" padding="sm">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Sources</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
@@ -320,18 +323,22 @@ export default function LibraryPage() {
                   ))}
                 </div>
                 <div className="flex space-x-3">
-                  <button
+                  <GlassButton
                     onClick={() => copyToClipboard(selectedPrompt)}
-                    className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                    size="sm"
                   >
                     Copy
-                  </button>
-                  <button
+                  </GlassButton>
+                  <LuxuryButton
                     onClick={() => usePrompt(selectedPrompt)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    size="sm"
+                    variant="gradient"
+                    gradientFrom="from-blue-500"
+                    gradientVia="via-cyan-500"
+                    gradientTo="to-teal-500"
                   >
                     Use This Prompt
-                  </button>
+                  </LuxuryButton>
                 </div>
               </div>
             </div>
