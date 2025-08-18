@@ -37,7 +37,7 @@ export function StudioHeader({ userEmail }: StudioHeaderProps) {
           <div className="flex items-center space-x-8">
             <Link href="/studio">
               <GradientText as="h1" size="2xl" variant="cosmic" animate>
-                🚀 Prompt Studio
+                🚀 GeniusPrompt
               </GradientText>
             </Link>
             

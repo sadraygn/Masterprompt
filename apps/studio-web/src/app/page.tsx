@@ -99,10 +99,10 @@ export default function LandingPage() {
             </div>
 
             <GradientText as="h1" size="2xl" variant="cosmic" animate className="text-6xl font-bold mb-6">
-              Prompt Enhancement Studio
+              GeniusPrompt
             </GradientText>
 
-            <p className="text-xl text-gray-300/80 mb-12 max-w-2xl mx-auto">
+            <p className="text-xl text-black mb-12 max-w-2xl mx-auto">
               Transform your simple prompts into powerful AI instructions. 
               Optimize for any model, enhance creativity, and get better results instantly.
             </p>
@@ -149,10 +149,10 @@ export default function LandingPage() {
       {/* Features Section */}
       <div className="container mx-auto px-4 py-24">
         <div className="text-center mb-16">
-          <GradientText as="h2" size="xl" variant="ocean" className="text-4xl font-bold mb-4">
+          <h2 className="text-4xl font-bold mb-4 text-black">
             Why Choose Our Studio?
-          </GradientText>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          </h2>
+          <p className="text-black max-w-2xl mx-auto">
             Everything you need to create perfect prompts for any AI model
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold text-white mb-2">
                 {feature.title}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-black">
                 {feature.description}
               </p>
             </LuxuryCard>
@@ -182,10 +182,10 @@ export default function LandingPage() {
       {/* How it Works Section */}
       <div className="container mx-auto px-4 py-24">
         <div className="text-center mb-16">
-          <GradientText as="h2" size="xl" variant="sunset" className="text-4xl font-bold mb-4">
+          <h2 className="text-4xl font-bold mb-4 text-black">
             How It Works
-          </GradientText>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          </h2>
+          <p className="text-black max-w-2xl mx-auto">
             Three simple steps to better AI interactions
           </p>
         </div>
@@ -216,7 +216,7 @@ export default function LandingPage() {
                 <h3 className="text-lg font-semibold text-white mb-2">
                   {item.title}
                 </h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-black">
                   {item.description}
                 </p>
               </div>
@@ -231,7 +231,7 @@ export default function LandingPage() {
           <GradientText as="h2" size="xl" variant="rainbow" className="text-3xl font-bold mb-4">
             Ready to Transform Your Prompts?
           </GradientText>
-          <p className="text-gray-300 mb-8">
+          <p className="text-black mb-8">
             Join thousands of users creating better AI interactions every day.
           </p>
           <LuxuryButton

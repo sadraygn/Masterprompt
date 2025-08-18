@@ -133,7 +133,7 @@ export function AuthModal({ mode, isOpen, onClose, onSuccess }: AuthModalProps) 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 transition-all duration-300"
+                className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-black placeholder-gray-500 focus:outline-none focus:border-purple-400 transition-all duration-300"
                 placeholder="you@example.com"
                 disabled={loading}
               />
@@ -149,7 +149,7 @@ export function AuthModal({ mode, isOpen, onClose, onSuccess }: AuthModalProps) 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 transition-all duration-300"
+                className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-black placeholder-gray-500 focus:outline-none focus:border-purple-400 transition-all duration-300"
                 placeholder="••••••••"
                 disabled={loading}
                 minLength={6}
@@ -187,12 +187,12 @@ export function AuthModal({ mode, isOpen, onClose, onSuccess }: AuthModalProps) 
           </form>
 
           {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
+          <div className="my-8">
+            <div className="flex items-center">
               <div className="w-full border-t border-gray-700"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-gray-900/50 text-gray-400">Or continue with</span>
+            <div className="text-center text-sm mt-4">
+              <span className="text-gray-400">Or continue with</span>
             </div>
           </div>
 
@@ -200,7 +200,7 @@ export function AuthModal({ mode, isOpen, onClose, onSuccess }: AuthModalProps) 
           <div className="space-y-3">
             <GlassButton
               onClick={() => handleOAuthSignIn('google')}
-              className="w-full"
+              className="w-full flex items-center justify-center"
               disabled={loading}
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -226,7 +226,7 @@ export function AuthModal({ mode, isOpen, onClose, onSuccess }: AuthModalProps) 
 
             <GlassButton
               onClick={() => handleOAuthSignIn('github')}
-              className="w-full"
+              className="w-full flex items-center justify-center"
               disabled={loading}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
