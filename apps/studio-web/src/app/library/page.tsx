@@ -187,10 +187,10 @@ export default function LibraryPage() {
                   </span>
                 </div>
               </div>
-              <button className="w-full mt-4 px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 text-sm transition">
+              <GlassButton className="w-full mt-4" size="sm">
                 Sync Libraries
-              </button>
-            </div>
+              </GlassButton>
+            </LuxuryCard>
           </div>
 
           {/* Prompt Grid */}
@@ -200,17 +200,19 @@ export default function LibraryPage() {
               <p className="text-gray-400">
                 Found {filteredPrompts.length} prompts
               </p>
-              <button className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition border border-gray-700">
+              <GlassButton size="sm">
                 + Add Custom Prompt
-              </button>
+              </GlassButton>
             </div>
 
             {/* Prompt Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredPrompts.map(prompt => (
-                <div
+                <LuxuryCard
                   key={prompt.id}
-                  className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition cursor-pointer"
+                  variant="glass"
+                  padding="md"
+                  className="cursor-pointer"
                   onClick={() => setSelectedPrompt(prompt)}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -272,7 +274,7 @@ export default function LibraryPage() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </LuxuryCard>
               ))}
             </div>
           </div>
